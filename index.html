@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Worksphere">
+<title>worksphere — Calculateur vitrages</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.2/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.4/jspdf.plugin.autotable.min.js"></script>
+<style>
+@font-face{font-family:'Gilroy';font-weight:700;src:local('Gilroy-Bold'),local('Gilroy Bold'),local('Inter');font-display:swap;}
+@font-face{font-family:'Gilroy';font-weight:800;src:local('Gilroy-ExtraBold'),local('Gilroy ExtraBold'),local('Inter');font-display:swap;}
+:root{--bg:#f5f7f7;--bg2:#fff;--bg3:#eef1f1;--border:#dce2e2;--text:#1a2e2e;--text2:#4a6060;--text3:#8a9e9e;--ws:#2b6e6e;--ws2:#1a5252;--ws3:#3a8a8a;--ws4:#e8f4f4;--green:#059669;--green-bg:#ecfdf5;--green-bdr:#86efac;--orange:#c2730a;--red:#c53030;--calc-bg:#e8f4f4;--calc-bdr:#a8d4d4;--calc-text:#1a5252}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',-apple-system,sans-serif;background:var(--bg);color:var(--text);font-size:13px;-webkit-font-smoothing:antialiased}
+input,select,button{font-family:inherit;font-size:13px}
+input[type=number],input[type=text]{background:var(--bg2);border:1px solid var(--border);color:var(--text);padding:7px 8px;border-radius:6px;width:100%;text-align:right;transition:all .2s}
+input[type=number]:focus,input[type=text]:focus{border-color:var(--ws);outline:none;box-shadow:0 0 0 3px rgba(43,110,110,.12)}
+input[type=text]{text-align:left}
+.inp-green{border-color:var(--green-bdr)!important;background:var(--green-bg)!important;color:#065f46!important;font-weight:500}
+.inp-green:focus{box-shadow:0 0 0 3px rgba(5,150,105,.12)!important;border-color:var(--green)!important}
+.calc-cell{background:var(--calc-bg);border:1px solid var(--calc-bdr);color:var(--calc-text);padding:7px 8px;border-radius:6px;font-weight:600;text-align:right}
+.calc-warn{color:var(--orange)!important;border-color:#fbbf24!important;background:#fffbeb!important}
+select{background:var(--bg2);border:1px solid var(--border);color:var(--text);padding:6px 4px;border-radius:6px;text-align:center;width:100%;cursor:pointer;font-weight:500}
+select:focus{border-color:var(--ws);outline:none;box-shadow:0 0 0 3px rgba(43,110,110,.12)}
+.btn{padding:8px 16px;border:1px solid var(--border);border-radius:8px;background:var(--bg2);color:var(--text2);cursor:pointer;font-size:12px;font-weight:500;display:inline-flex;align-items:center;gap:5px;transition:all .15s}
+.btn:hover{background:var(--bg3);color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.btn:active{transform:scale(.97)}
+.btn-ws{border-color:var(--ws);color:var(--ws)}
+.btn-ws:hover{background:var(--ws4);color:var(--ws2)}
+.btn-d{border-color:#fca5a5;color:var(--red);font-size:11px}
+.btn-d:hover{background:#fef2f2}
+.btn-export{background:var(--ws);border:1px solid var(--ws2);color:#fff;font-weight:600;padding:10px 18px;border-radius:8px}
+.btn-export:hover{background:var(--ws2);box-shadow:0 2px 8px rgba(43,110,110,.3)}
+.btn-pdf{background:#b91c1c;border:1px solid #991b1b;color:#fff;font-weight:600;padding:10px 18px;border-radius:8px}
+.btn-pdf:hover{background:#991b1b;box-shadow:0 2px 8px rgba(185,28,28,.3)}
+.brand-bar{background:var(--ws2);padding:14px 24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}
+.brand-left{display:flex;align-items:baseline;gap:2px}
+.brand-name{font-family:'Gilroy','Inter',sans-serif;font-size:24px;font-weight:800;color:#fff;letter-spacing:-.5px}
+.brand-dot{font-family:'Gilroy','Inter',sans-serif;color:var(--ws3);font-size:24px;font-weight:800}
+.brand-base{font-size:10px;color:rgba(255,255,255,.45);margin-left:12px;letter-spacing:.2px}
+.brand-right{font-size:10px;color:rgba(255,255,255,.5)}
+.hdr-content{background:var(--bg2);border-bottom:1px solid var(--border);padding:16px 24px;box-shadow:0 1px 4px rgba(0,0,0,.03)}
+.hdr-inner{max-width:1340px;margin:0 auto}
+.hdr-row{display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:10px}
+.hdr-title h1{font-family:'Gilroy','Inter',sans-serif;font-size:17px;color:var(--text);font-weight:800}
+.hdr-sub{font-size:11px;color:var(--text3);margin-top:2px}
+.hdr-btns{display:flex;gap:8px;flex-wrap:wrap}
+.hdr-proj{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px}
+.hdr-proj label{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;display:block;margin-bottom:4px;font-weight:600}
+.config-bar{margin-top:14px;padding:14px 16px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;display:flex;align-items:flex-end;gap:16px;flex-wrap:wrap}
+.config-item{display:flex;flex-direction:column;gap:4px}
+.config-item label{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;font-weight:600}
+.config-item select,.config-item input{font-size:13px;padding:8px 10px;border-radius:6px;font-weight:600}
+.profile-sel{min-width:180px;color:var(--ws2)!important;font-weight:700!important}
+.joint-sel{width:70px}
+.maxl-inp{width:90px;font-weight:700!important;color:var(--ws)!important}
+.config-info{font-size:11px;color:var(--text3);padding:6px 0;display:flex;gap:12px;flex-wrap:wrap}
+.config-info span{background:var(--ws4);color:var(--ws2);padding:3px 8px;border-radius:4px;font-weight:600;font-size:11px}
+main{max-width:1340px;margin:0 auto;padding:20px 24px 80px}
+.zone{margin-bottom:20px;background:var(--bg2);border:1px solid var(--border);border-radius:12px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.04)}
+.zone-hdr{background:linear-gradient(135deg,var(--ws2),var(--ws));padding:10px 16px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.zone-hdr .zbar{width:4px;height:22px;background:rgba(255,255,255,.5);border-radius:2px;flex-shrink:0}
+.zone-hdr input[type=text]{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);color:#fff;font-size:13px;padding:5px 10px;border-radius:6px}
+.zone-hdr input::placeholder{color:rgba(255,255,255,.35)}
+.zone-hdr input:focus{border-color:rgba(255,255,255,.5)!important;box-shadow:0 0 0 3px rgba(255,255,255,.08)!important}
+.zone-hdr .zname{width:120px;font-weight:700;font-size:14px}
+.zone-hdr .zdesc{flex:1;min-width:120px}
+.zbtn{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);color:#fff;padding:6px 14px;border-radius:6px;cursor:pointer;font-size:12px;font-weight:500;transition:all .15s}
+.zbtn:hover{background:rgba(255,255,255,.22)}
+.zdel{border-color:rgba(255,150,150,.4)!important;color:#ffb3b3!important}
+.zsep{color:rgba(255,255,255,.3)}
+.zone-body{padding:6px 12px 12px}
+.tbl{overflow-x:auto}
+table{width:100%;border-collapse:separate;border-spacing:0;min-width:1020px}
+thead th{background:var(--bg3);color:var(--text3);font-size:9.5px;text-transform:uppercase;letter-spacing:.5px;padding:10px 4px;text-align:center;position:sticky;top:0;z-index:2;border-bottom:2px solid var(--border);font-weight:700}
+tbody td{padding:5px 3px;vertical-align:middle;border-bottom:1px solid #f0f3f3}
+.row-first td{border-top:2px solid var(--border);padding-top:10px}
+.zone-tot{background:var(--bg3);border-top:1px solid var(--border);padding:10px 16px;display:flex;justify-content:flex-end;gap:18px;align-items:center;font-weight:600;font-size:12px;flex-wrap:wrap}
+.zone-tot .lbl{color:var(--ws);text-transform:uppercase;font-size:10px;font-weight:700}
+.zone-tot .val{color:var(--ws2);font-weight:700}
+.grand-tot{background:linear-gradient(135deg,var(--ws2),var(--ws));border-radius:12px;padding:18px 24px;margin-top:20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;box-shadow:0 4px 16px rgba(43,110,110,.25)}
+.gt-title{font-family:'Gilroy','Inter',sans-serif;font-size:16px;font-weight:800;color:#fff}
+.gt-item{text-align:center}
+.gt-label{font-size:9px;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:.6px;font-weight:600;margin-bottom:2px}
+.gt-val{font-family:'Gilroy','Inter',sans-serif;font-size:24px;font-weight:800;color:#fff}
+.gt-unit{font-size:12px;color:rgba(255,255,255,.45);font-weight:500}
+.gt-sep{width:1px;height:40px;background:rgba(255,255,255,.15)}
+.footer{text-align:center;padding:24px;font-size:10px;color:var(--text3)}
+.footer a{color:var(--ws);text-decoration:none;font-weight:600}
+@media(max-width:700px){.hdr-proj{grid-template-columns:1fr}.config-bar{flex-direction:column;align-items:stretch}.grand-tot{flex-direction:column;text-align:center}.gt-sep{width:60px;height:1px}table{font-size:11px}.brand-bar{flex-direction:column;align-items:flex-start}.brand-base{margin-left:0;display:block;margin-top:2px}}
+</style>
+</head>
+<body>
+<div class="brand-bar">
+  <div><div class="brand-left"><span class="brand-name">worksphere</span><span class="brand-dot">.</span></div><div class="brand-base">Nous transformons vos espaces pour inspirer votre équipe</div></div>
+  <div class="brand-right">Calculateur de commande vitrages</div>
+</div>
+<div class="hdr-content"><div class="hdr-inner">
+  <div class="hdr-row">
+    <div class="hdr-title"><h1>Commande vitrages cloisons</h1><div class="hdr-sub">Calcul automatique des dimensions de commande par profil</div></div>
+    <div class="hdr-btns"><button class="btn btn-export" onclick="exportCSV()">↓ CSV</button><button class="btn btn-pdf" onclick="exportPDF()">↓ PDF</button></div>
+  </div>
+  <div class="hdr-proj">
+    <div><label>Projet</label><input type="text" id="projName" value="BME (Verviers - BEL)"></div>
+    <div><label>Adresse livraison</label><input type="text" id="projAddr" value="Avenue Mercury, B-4800 Verviers"></div>
+  </div>
+  <div class="config-bar">
+    <div class="config-item"><label>Profil</label><select id="cfgProfile" class="profile-sel" onchange="onProfileChange()"><option value="influence">Clipper Influence</option><option value="elance">Clipper Élance</option><option value="osmose">Qovans Osmose</option></select></div>
+    <div class="config-item"><label>Joint</label><select id="cfgJoint" class="joint-sel" onchange="render()"><option value="2">2 mm</option><option value="3">3 mm</option></select></div>
+    <div class="config-item"><label>Larg. max vitrage</label><input type="number" id="cfgMaxL" class="maxl-inp" value="1200" onchange="render()"></div>
+    <div class="config-info" id="cfgInfo"></div>
+  </div>
+</div></div>
+<main id="main"></main>
+<div class="footer">© 2025 <a href="https://www.worksphere.be" target="_blank">worksphere</a> — Avenue Lavoisier 9, 1300 Wavre — <a href="tel:+3223183601">+32 2 318 36 01</a> — <a href="mailto:hello@worksphere.be">hello@worksphere.be</a></div>
+<script>
+var PROFILES={influence:{name:"Clipper Influence",aisL:18,aisH:20,descL:"9+9 mm",descH:"10+10 mm"},elance:{name:"Clipper \u00c9lance",aisL:24,aisH:30,descL:"12+12 mm",descH:"15+15 mm"},osmose:{name:"Qovans Osmose",aisL:16,aisH:25,descL:"8+8 mm",descH:"12.5+12.5 mm"}};
+var uid=0;function gid(){return"u"+(++uid)}
+function mkGlass(i,h){return{id:gid(),idx:i,hautCDV:h||0}}
+function mkCloison(n){return{id:gid(),num:String(n),desc:"",largCDV:0,hautMoy:0,vitrage:"double",ep1:10,ep2:12,glasses:[mkGlass(1,0)]}}
+function mkZone(n,nm,d){return{id:gid(),name:nm||"ZONE "+n,desc:d||"",cloisons:[mkCloison(1)]}}
+var zones=[mkZone(1,"ZONE 1","")];
+function getP(){var pr=PROFILES[document.getElementById("cfgProfile").value]||PROFILES.influence;return{aisL:pr.aisL,aisH:pr.aisH,joint:+document.getElementById("cfgJoint").value||2,maxL:+document.getElementById("cfgMaxL").value||1200,profile:pr}}
+function onProfileChange(){updateInfo();render()}
+function updateInfo(){var pr=PROFILES[document.getElementById("cfgProfile").value]||PROFILES.influence;document.getElementById("cfgInfo").innerHTML='<span>Aisance L : '+pr.aisL+' mm ('+pr.descL+')</span><span>Aisance H : '+pr.aisH+' mm ('+pr.descH+')</span>'}
+function calcNb(w,mx,j){if(!w||w<=0)return 1;var n=1;while((w-(n-1)*j)/n>mx)n++;return n}
+function calcLV(w,nb,j,a){if(!w||!nb)return 0;return Math.round(((w-(nb-1)*j)/nb+a)*10)/10}
+function calcHV(h,a){return(h||0)+a}
+function esc(s){return String(s==null?"":s).replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/</g,"&lt;")}
+function chgLarg(zi,ci,v){var p=getP(),c=zones[zi].cloisons[ci];c.largCDV=v;var nb=calcNb(v,p.maxL,p.joint),ng=[];for(var i=0;i<nb;i++)ng.push(c.glasses[i]?{id:c.glasses[i].id,idx:i+1,hautCDV:c.glasses[i].hautCDV}:mkGlass(i+1,c.hautMoy));c.glasses=ng;render()}
+function chgNb(zi,ci,v){var c=zones[zi].cloisons[ci],nb=Math.max(1,v),ng=[];for(var i=0;i<nb;i++)ng.push(c.glasses[i]?{id:c.glasses[i].id,idx:i+1,hautCDV:c.glasses[i].hautCDV}:mkGlass(i+1,c.hautMoy));c.glasses=ng;render()}
+function chgHaut(zi,ci,gi,v){var c=zones[zi].cloisons[ci];if(gi===0){c.hautMoy=v;for(var i=0;i<c.glasses.length;i++)c.glasses[i].hautCDV=v}else c.glasses[gi].hautCDV=v;render()}
+function chgType(zi,ci,v){zones[zi].cloisons[ci].vitrage=v;render()}
+function chgEp1(zi,ci,v){zones[zi].cloisons[ci].ep1=+v;render()}
+function chgEp2(zi,ci,v){zones[zi].cloisons[ci].ep2=+v;render()}
+function addCloison(zi){zones[zi].cloisons.push(mkCloison(zones[zi].cloisons.length+1));render()}
+function remCloison(zi,ci){zones[zi].cloisons.splice(ci,1);render()}
+function addZone(){zones.push(mkZone(zones.length+1));render()}
+function removeZone(zi){zones.splice(zi,1);render()}
+function selOpts(vs,sel){return vs.map(function(v){return'<option value="'+v+'"'+(v===sel?' selected':'')+'>'+v+'</option>'}).join("")}
+
+function render(){
+  var p=getP(),h="",tQ8=0,tQ10=0,tQ12=0,tSurf=0;
+  for(var zi=0;zi<zones.length;zi++){
+    var z=zones[zi],zQ8=0,zQ10=0,zQ12=0,zSurf=0;
+    h+='<div class="zone"><div class="zone-hdr"><div class="zbar"></div>';
+    h+='<input type="text" class="zname" value="'+esc(z.name)+'" onchange="zones['+zi+'].name=this.value">';
+    h+='<span class="zsep">\u2014</span>';
+    h+='<input type="text" class="zdesc" value="'+esc(z.desc)+'" placeholder="Description zone..." onchange="zones['+zi+'].desc=this.value">';
+    h+='<button class="zbtn" onclick="addCloison('+zi+')">+ Cloison</button>';
+    if(zones.length>1)h+='<button class="zbtn zdel" onclick="removeZone('+zi+')">\u2715 Zone</button>';
+    h+='</div><div class="zone-body"><div class="tbl"><table><thead><tr>';
+    h+='<th style="width:36px">N\u00b0</th><th style="min-width:150px">Description</th><th style="width:54px">Type</th><th style="width:120px">\u00c9paisseurs</th>';
+    h+='<th style="width:90px">Larg. CDV</th><th style="width:50px">Nb</th><th style="width:34px">N\u00b0v</th><th style="width:90px">Haut. CDV</th>';
+    h+='<th style="width:100px">Larg. cmd</th><th style="width:100px">Haut. cmd</th>';
+    h+='<th style="width:40px">8mm</th><th style="width:40px">10mm</th><th style="width:40px">12mm</th>';
+    h+='<th style="width:78px">Surf. m\u00b2</th><th style="width:30px"></th></tr></thead><tbody>';
+    for(var ci=0;ci<z.cloisons.length;ci++){
+      var c=z.cloisons[ci],nb=c.glasses.length,lv=calcLV(c.largCDV,nb,p.joint,p.aisL),warn=lv>p.maxL;
+      var dv=c.vitrage==="double",npanes=dv?2:1;
+      var q8=(c.ep1===8?1:0)+(dv&&c.ep2===8?1:0),q10=(c.ep1===10?1:0)+(dv&&c.ep2===10?1:0),q12=(c.ep1===12?1:0)+(dv&&c.ep2===12?1:0);
+      for(var gi=0;gi<c.glasses.length;gi++){
+        var g=c.glasses[gi],hv=calcHV(g.hautCDV,p.aisH),surf=(c.largCDV&&g.hautCDV)?Math.round((lv*hv/1e6)*npanes*1000)/1000:0;
+        zQ8+=q8;zQ10+=q10;zQ12+=q12;zSurf+=surf;
+        h+='<tr'+(gi===0?' class="row-first"':'')+'>';
+        if(gi===0){
+          h+='<td style="text-align:center;font-weight:700;color:var(--ws2)" rowspan="'+nb+'">'+esc(c.num)+'</td>';
+          h+='<td rowspan="'+nb+'"><div style="display:flex;gap:4px"><input type="text" value="'+esc(c.num)+'" style="width:36px;text-align:center;font-weight:600" onchange="zones['+zi+'].cloisons['+ci+'].num=this.value;render()"><input type="text" value="'+esc(c.desc)+'" placeholder="Description..." style="flex:1" onchange="zones['+zi+'].cloisons['+ci+'].desc=this.value"></div></td>';
+          h+='<td rowspan="'+nb+'"><select style="font-weight:600;color:'+(dv?'var(--ws)':'var(--orange)')+'" onchange="chgType('+zi+','+ci+',this.value)"><option value="double"'+(dv?' selected':'')+'>DV</option><option value="simple"'+(!dv?' selected':'')+'>SV</option></select></td>';
+          h+='<td rowspan="'+nb+'"><div style="display:flex;gap:4px;align-items:center"><select style="min-width:54px" onchange="chgEp1('+zi+','+ci+',this.value)">'+selOpts([8,10,12],c.ep1)+'</select>';
+          if(dv)h+='<span style="color:var(--text3);font-size:13px;font-weight:700;flex-shrink:0">+</span><select style="min-width:54px" onchange="chgEp2('+zi+','+ci+',this.value)">'+selOpts([8,10,12],c.ep2)+'</select>';
+          h+='</div></td>';
+          h+='<td rowspan="'+nb+'"><input type="number" class="inp-green" value="'+(c.largCDV||'')+'" placeholder="mm" onchange="chgLarg('+zi+','+ci+',+this.value)"></td>';
+          h+='<td rowspan="'+nb+'"><input type="number" value="'+nb+'" min="1" style="text-align:center;font-weight:600" onchange="chgNb('+zi+','+ci+',+this.value)"></td>';
+        }
+        h+='<td style="text-align:center;font-size:11px;color:var(--text3);font-weight:500">'+g.idx+'</td>';
+        h+='<td><input type="number" class="inp-green" value="'+(g.hautCDV||'')+'" placeholder="mm" onchange="chgHaut('+zi+','+ci+','+gi+',+this.value)"></td>';
+        h+='<td><div class="calc-cell'+(warn?' calc-warn':'')+'">'+(c.largCDV?lv.toFixed(1):'\u2014')+'</div></td>';
+        h+='<td><div class="calc-cell">'+(g.hautCDV?hv:'\u2014')+'</div></td>';
+        h+='<td style="text-align:center;font-weight:700;color:'+(q8?'var(--text)':'var(--border)')+'">'+(q8||'')+'</td>';
+        h+='<td style="text-align:center;font-weight:700;color:'+(q10?'var(--text)':'var(--border)')+'">'+(q10||'')+'</td>';
+        h+='<td style="text-align:center;font-weight:700;color:'+(q12?'var(--text)':'var(--border)')+'">'+(q12||'')+'</td>';
+        h+='<td style="text-align:right;font-size:12px;color:var(--text2);font-weight:500">'+(surf?surf.toFixed(3):'\u2014')+'</td>';
+        if(gi===0){h+='<td rowspan="'+nb+'" style="text-align:center">';if(z.cloisons.length>1)h+='<button class="btn btn-d" style="padding:3px 7px" onclick="remCloison('+zi+','+ci+')">\u2715</button>';h+='</td>'}
+        h+='</tr>';
+      }
+    }
+    h+='</tbody></table></div></div>';
+    h+='<div class="zone-tot"><span class="lbl">Total '+esc(z.name)+'</span>';
+    if(zQ8)h+='<span class="val">'+zQ8+'\u00d78mm</span>';
+    if(zQ10)h+='<span class="val">'+zQ10+'\u00d710mm</span>';
+    if(zQ12)h+='<span class="val">'+zQ12+'\u00d712mm</span>';
+    h+='<span class="val" style="font-size:13px">'+zSurf.toFixed(3)+' m\u00b2</span></div></div>';
+    tQ8+=zQ8;tQ10+=zQ10;tQ12+=zQ12;tSurf+=zSurf;
+  }
+  h+='<button class="btn btn-ws" style="margin:12px 0 20px" onclick="addZone()">+ Ajouter une zone</button>';
+  h+='<div class="grand-tot"><div class="gt-title">TOTAL G\u00c9N\u00c9RAL</div>';
+  if(tQ8)h+='<div class="gt-item"><div class="gt-label">Pi\u00e8ces 8mm</div><div class="gt-val">'+tQ8+'</div></div>';
+  if(tQ10)h+='<div class="gt-item"><div class="gt-label">Pi\u00e8ces 10mm</div><div class="gt-val">'+tQ10+'</div></div>';
+  if(tQ12)h+='<div class="gt-item"><div class="gt-label">Pi\u00e8ces 12mm</div><div class="gt-val">'+tQ12+'</div></div>';
+  h+='<div class="gt-sep"></div>';
+  h+='<div class="gt-item"><div class="gt-label">Total pi\u00e8ces</div><div class="gt-val">'+(tQ8+tQ10+tQ12)+'</div></div>';
+  h+='<div class="gt-item"><div class="gt-label">Surface totale</div><div class="gt-val">'+tSurf.toFixed(3)+' <span class="gt-unit">m\u00b2</span></div></div></div>';
+  document.getElementById("main").innerHTML=h;
+}
+
+function exportCSV(){
+  var p=getP(),sep=";",lines=[];
+  function e(v){var s=String(v==null?"":v);return(s.indexOf(sep)>=0||s.indexOf('"')>=0||s.indexOf("\n")>=0)?'"'+s.replace(/"/g,'""')+'"':s}
+  function row(){var a=[];for(var i=0;i<arguments.length;i++)a.push(e(arguments[i]));lines.push(a.join(sep))}
+  row("COMMANDE VITRAGES - "+p.profile.name.toUpperCase()+" - WORKSPHERE");
+  row("Projet : "+document.getElementById("projName").value);
+  row("Adresse : "+document.getElementById("projAddr").value);
+  row("Date : "+new Date().toLocaleDateString("fr-BE"));
+  row();row("Profil: "+p.profile.name,"Aisance L:"+p.aisL+"mm","Aisance H:"+p.aisH+"mm","Joint:"+p.joint+"mm","Max L:"+p.maxL+"mm");row();
+  var gQ8=0,gQ10=0,gQ12=0;
+  for(var zi=0;zi<zones.length;zi++){
+    var z=zones[zi];row(z.name+(z.desc?" - "+z.desc:""));
+    row("N","Desc","Type","Ep","Larg CDV","Nb","Nv","Haut CDV","Larg cmd","Haut cmd","8mm","10mm","12mm","Surf m2");
+    var zQ8=0,zQ10=0,zQ12=0,zS=0;
+    for(var ci=0;ci<z.cloisons.length;ci++){
+      var c=z.cloisons[ci],nb=c.glasses.length,lv=calcLV(c.largCDV,nb,p.joint,p.aisL);
+      var dv=c.vitrage==="double",np=dv?2:1;
+      var q8=(c.ep1===8?1:0)+(dv&&c.ep2===8?1:0),q10=(c.ep1===10?1:0)+(dv&&c.ep2===10?1:0),q12=(c.ep1===12?1:0)+(dv&&c.ep2===12?1:0);
+      for(var gi=0;gi<c.glasses.length;gi++){
+        var g=c.glasses[gi],hv=calcHV(g.hautCDV,p.aisH),surf=Math.round((lv*hv/1e6)*np*1000)/1000;
+        row(gi===0?c.num:"",gi===0?c.desc:"",gi===0?(dv?"DV":"SV"):"",gi===0?(dv?c.ep1+"+"+c.ep2:c.ep1):"",gi===0?c.largCDV:"",gi===0?nb:"",g.idx,g.hautCDV,lv,hv,q8,q10,q12,surf);
+        zQ8+=q8;zQ10+=q10;zQ12+=q12;zS+=surf;
+      }
+    }
+    row("","","","","","","","Total "+z.name,"","",zQ8,zQ10,zQ12,Math.round(zS*1000)/1000);row();
+    gQ8+=zQ8;gQ10+=zQ10;gQ12+=zQ12;
+  }
+  row("","","","","","","","TOTAL","","",gQ8,gQ10,gQ12,"");
+  var blob=new Blob(["\uFEFF"+lines.join("\r\n")],{type:"text/csv;charset=utf-8;"});
+  var a=document.createElement("a");a.href=URL.createObjectURL(blob);
+  a.download="Commande_Worksphere_"+document.getElementById("projName").value.replace(/[^a-zA-Z0-9]/g,"_")+".csv";
+  a.click();URL.revokeObjectURL(a.href);
+}
+
+function exportPDF(){
+  var p=getP(),jsPDF=window.jspdf.jsPDF;
+  var doc=new jsPDF({orientation:'landscape',unit:'mm',format:'a4'});
+  var W=297,H=210,mx=10,y=12;
+  var projN=document.getElementById("projName").value;
+  var projA=document.getElementById("projAddr").value;
+  var dateStr=new Date().toLocaleDateString("fr-BE");
+
+  doc.setFillColor(26,82,82);doc.rect(0,0,W,22,'F');
+  doc.setFont('helvetica','bold');doc.setFontSize(16);doc.setTextColor(255,255,255);
+  doc.text('worksphere.',mx,14);
+  doc.setFontSize(9);doc.setFont('helvetica','normal');doc.setTextColor(200,220,220);
+  doc.text('Calculateur de commande vitrages',mx+42,14);
+  doc.setFontSize(8);doc.text(dateStr,W-mx,14,{align:'right'});
+
+  y=28;
+  doc.setTextColor(26,46,46);doc.setFontSize(10);doc.setFont('helvetica','bold');
+  doc.text('Projet : ',mx,y);doc.setFont('helvetica','normal');doc.text(projN,mx+18,y);
+  doc.text('Adresse : ',mx+110,y);doc.text(projA,mx+130,y);
+  y+=5;
+  doc.setFontSize(9);doc.setTextColor(80,100,100);
+  doc.text('Profil: '+p.profile.name+'  |  Aisance L: '+p.aisL+'mm ('+p.profile.descL+')  |  Aisance H: '+p.aisH+'mm ('+p.profile.descH+')  |  Joint: '+p.joint+'mm  |  Max: '+p.maxL+'mm',mx,y);
+  y+=6;
+
+  var gQ8=0,gQ10=0,gQ12=0,gSurf=0;
+  for(var zi=0;zi<zones.length;zi++){
+    var z=zones[zi];
+    doc.setFillColor(43,110,110);doc.rect(mx,y,W-2*mx,7,'F');
+    doc.setFont('helvetica','bold');doc.setFontSize(9);doc.setTextColor(255,255,255);
+    doc.text(z.name+(z.desc?' \u2014 '+z.desc:''),mx+3,y+5);y+=9;
+    var head=[['N','Description','Type','Ep','Larg CDV','Nb','Nv','Haut CDV','Larg cmd','Haut cmd','8mm','10mm','12mm','Surf m2']];
+    var body=[],zQ8=0,zQ10=0,zQ12=0,zS=0;
+    for(var ci=0;ci<z.cloisons.length;ci++){
+      var c=z.cloisons[ci],nb=c.glasses.length,lv=calcLV(c.largCDV,nb,p.joint,p.aisL);
+      var dv=c.vitrage==="double",np=dv?2:1;
+      var q8=(c.ep1===8?1:0)+(dv&&c.ep2===8?1:0),q10=(c.ep1===10?1:0)+(dv&&c.ep2===10?1:0),q12=(c.ep1===12?1:0)+(dv&&c.ep2===12?1:0);
+      var epL=dv?c.ep1+'+'+c.ep2:String(c.ep1);
+      for(var gi=0;gi<c.glasses.length;gi++){
+        var g=c.glasses[gi],hv=calcHV(g.hautCDV,p.aisH),surf=(c.largCDV&&g.hautCDV)?Math.round((lv*hv/1e6)*np*1000)/1000:0;
+        body.push([gi===0?c.num:'',gi===0?c.desc:'',gi===0?(dv?'DV':'SV'):'',gi===0?epL:'',gi===0?(c.largCDV||''):'',gi===0?nb:'',g.idx,g.hautCDV||'',c.largCDV?lv.toFixed(1):'',g.hautCDV?hv:'',q8||'',q10||'',q12||'',surf?surf.toFixed(3):'']);
+        zQ8+=q8;zQ10+=q10;zQ12+=q12;zS+=surf;
+      }
+    }
+    doc.autoTable({startY:y,margin:{left:mx,right:mx},head:head,body:body,theme:'grid',
+      styles:{fontSize:7.5,cellPadding:1.5,lineColor:[220,226,226],lineWidth:0.2,font:'helvetica'},
+      headStyles:{fillColor:[43,110,110],textColor:[255,255,255],fontStyle:'bold',halign:'center',fontSize:7},
+      columnStyles:{0:{halign:'center',cellWidth:10},1:{cellWidth:38},2:{halign:'center',cellWidth:12},3:{halign:'center',cellWidth:14},4:{halign:'right',cellWidth:20},5:{halign:'center',cellWidth:10},6:{halign:'center',cellWidth:10},7:{halign:'right',cellWidth:20},8:{halign:'right',cellWidth:22,textColor:[26,82,82],fontStyle:'bold'},9:{halign:'right',cellWidth:22,textColor:[26,82,82],fontStyle:'bold'},10:{halign:'center',cellWidth:12},11:{halign:'center',cellWidth:12},12:{halign:'center',cellWidth:12},13:{halign:'right',cellWidth:20}},
+      didParseCell:function(data){if(data.section==='body'&&(data.column.index===8||data.column.index===9))data.cell.styles.fillColor=[232,244,244]}
+    });
+    y=doc.lastAutoTable.finalY+2;
+    // Zone total line
+    doc.setFillColor(238,241,241);doc.rect(mx,y,W-2*mx,6,'F');
+    doc.setFont('helvetica','bold');doc.setFontSize(8);doc.setTextColor(43,110,110);
+    var ztxt='Total '+z.name+' :';
+    if(zQ8)ztxt+='  '+zQ8+'x8mm';if(zQ10)ztxt+='  '+zQ10+'x10mm';if(zQ12)ztxt+='  '+zQ12+'x12mm';
+    ztxt+='  |  '+zS.toFixed(3)+' m\u00b2';
+    doc.text(ztxt,W-mx-2,y+4,{align:'right'});
+    y+=10;
+    gQ8+=zQ8;gQ10+=zQ10;gQ12+=zQ12;gSurf+=zS;
+    if(y>H-30&&zi<zones.length-1){doc.addPage();y=12}
+  }
+
+  if(y>H-22){doc.addPage();y=12}
+  doc.setFillColor(26,82,82);doc.rect(mx,y,W-2*mx,16,'F');
+  doc.setFont('helvetica','bold');doc.setFontSize(11);doc.setTextColor(255,255,255);
+  doc.text('TOTAL G\u00c9N\u00c9RAL',mx+4,y+10);
+  doc.setFontSize(9);var tx=mx+70;
+  function gtI(lb,vl,x){doc.setFont('helvetica','normal');doc.setFontSize(7);doc.text(lb,x,y+5);doc.setFont('helvetica','bold');doc.setFontSize(12);doc.text(String(vl),x,y+12)}
+  if(gQ8){gtI('Pi\u00e8ces 8mm',gQ8,tx);tx+=38}
+  if(gQ10){gtI('Pi\u00e8ces 10mm',gQ10,tx);tx+=38}
+  if(gQ12){gtI('Pi\u00e8ces 12mm',gQ12,tx);tx+=38}
+  tx+=5;gtI('Total pi\u00e8ces',gQ8+gQ10+gQ12,tx);tx+=38;
+  gtI('Surface totale',gSurf.toFixed(3)+' m\u00b2',tx);
+
+  var pC=doc.getNumberOfPages();
+  for(var i=1;i<=pC;i++){doc.setPage(i);doc.setFontSize(7);doc.setTextColor(150,170,170);doc.setFont('helvetica','normal');doc.text('worksphere \u2014 Avenue Lavoisier 9, 1300 Wavre \u2014 hello@worksphere.be \u2014 +32 2 318 36 01',mx,H-5);doc.text('Page '+i+'/'+pC,W-mx,H-5,{align:'right'})}
+  doc.save('Commande_Worksphere_'+projN.replace(/[^a-zA-Z0-9]/g,'_')+'.pdf');
+}
+
+updateInfo();render();
+</script>
+</body>
+</html>
